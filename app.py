@@ -58,13 +58,14 @@ YAHOO_APP_ID = os.getenv("YAHOO_APP_ID")
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 CALIL_APP_KEY = os.getenv("CALIL_APP_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL") # ★変更点: INIADの互換エンドポイントを指定
 # ★変更点: 楽天ブックスAPI(価格比較に追加するため)
 RAKUTEN_APPLICATION_ID = os.getenv("RAKUTEN_APPLICATION_ID")
 RAKUTEN_ACCESS_KEY = os.getenv("RAKUTEN_ACCESS_KEY")
 RAKUTEN_AFFILIATE_ID = os.getenv("RAKUTEN_AFFILIATE_ID")
 
 # ★変更点: OpenAI APIのクライアントをここで1回だけ作っておき、使い回す
-openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+openai_client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL) if OPENAI_API_KEY else None
 
 
 def _parse_volume_item(item: dict) -> dict:
