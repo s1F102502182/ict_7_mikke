@@ -225,7 +225,16 @@
                 <a class="library-setting-link" href="/library-setting">(変更する)</a>
             </p>
             {% endif %}
-            {% if not has_isbn %}
+
+            {% if not library_area %}
+                <!-- 地域未設定のときの案内ボックス -->
+                <div style="margin-top: 10px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; text-align: center;">
+                    <p style="margin-top: 0; margin-bottom: 15px; color: #333;">お住まいの地域を設定すると、<br>近くの図書館の貸出状況を確認できるようになります。</p>
+                    <a href="/library-setting?next={{ request.path }}" style="display: inline-block; padding: 10px 20px; background-color: #333; color: #fff; text-decoration: none; border-radius: 6px; font-size: 0.9em;">
+                        図書館の地域を設定する
+                    </a>
+                </div>
+            {% elif not has_isbn %}
                 <p>この本はISBN情報が登録されていないため、図書館の貸出状況を確認できません。</p>
             {% elif library_results is none %}
                 <p>図書館の貸出状況の取得に失敗しました。時間をおいて再度お試しください。</p>

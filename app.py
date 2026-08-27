@@ -648,14 +648,8 @@ def library_setting():
 def book_detail(book_id):
     """
     1冊分の詳細情報・価格比較・おすすめ・図書館貸出状況を表示する。
-
-    ★変更点: 図書館の地域が未設定の場合、貸出状況を表示せずに
-    「未設定です」と出すのではなく、そのまま /library-setting へ飛ばす。
-    設定完了後は next パラメータでこのページに自動的に戻ってくる。
     """
-    # ★変更点: 図書館未設定なら、先に設定画面へリダイレクトする
-    if not session.get("library_systems"):
-        return redirect(url_for("library_setting", next=url_for("book_detail", book_id=book_id)))
+    # 強制リダイレクトの処理を削除しました
 
     try:
         book = get_book_by_id(book_id)
