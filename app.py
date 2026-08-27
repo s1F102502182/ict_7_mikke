@@ -213,11 +213,13 @@ SEARCH_AGENT_TOOLS = [
 # ★変更点: LLMの判断がブレて無限にループしないよう、ここで上限を固定する。
 # 「エージェントの自律性」と「暴走を防ぐガードレール」は必ずセットで実装する必要がある。
 MAX_AGENT_ITERATIONS = 3
-# 「もう十分」とLLMに判断させる目安の件数
-ENOUGH_BOOKS_COUNT = 5
+# ユーザーが件数を指定しなかった場合のデフォルト値
+DEFAULT_MAX_RESULTS = 10
+# 選択肢として画面に表示する件数(index.htmlのプルダウンと対応させる)
+ALLOWED_MAX_RESULTS = [5, 10, 15, 20]
 
 
-def run_search_agent(user_input: str) -> tuple[list[dict], list[str]]:
+def run_search_agent(user_input: str, max_results: int = DEFAULT_MAX_RESULTS) -> tuple[list[dict], list[str]]:
     """
     Function Callingを使い、LLMに検索ツールを渡して自律的に検索させるエージェント。
 
@@ -228,6 +230,9 @@ def run_search_agent(user_input: str) -> tuple[list[dict], list[str]]:
 
     Args:
         user_input: ユーザーが入力したシチュエーション文
+        max_results: ★変更点: ユーザーが指定した「欲しい件数」。
+                     LLMに「この件数集まったら終了してよい」と伝える目安にすると同時に、
+                     最終的に返す件数の上限としても使う。
 
     Returns:
         (見つかった本のリスト, LLMが実際に使った検索キーワードのリスト)
@@ -237,7 +242,7 @@ def run_search_agent(user_input: str) -> tuple[list[dict], list[str]]:
     if openai_client is None:
         refined = interpret_search_query(user_input)
         try:
-            books = search_books(refined)
+            books = search_books(refined, max_results=max_results)
         except requests.exceptions.RequestException:
             books = []
         return books, [refined]
@@ -248,7 +253,7 @@ def run_search_agent(user_input: str) -> tuple[list[dict], list[str]]:
             "content": (
                 "あなたは本探しエージェントです。ユーザーの気分やシチュエーションの説明から、"
                 "search_google_books ツールを使って本を検索してください。"
-                f"合計{ENOUGH_BOOKS_COUNT}件以上の本が集まったら、それ以上ツールを呼ばずに"
+                f"合計{max_results}件以上の本が集まったら、それ以上ツールを呼ばずに"
                 "検索結果に満足した旨を一言述べて終了してください。"
                 "1回の検索で件数が少ない場合は、言い回しを変えたキーワードで"
                 f"最大{MAX_AGENT_ITERATIONS}回まで検索し直してよいです。"
@@ -290,7 +295,8 @@ def run_search_agent(user_input: str) -> tuple[list[dict], list[str]]:
             queries_used.append(query)
 
             try:
-                results = search_books(query, max_results=5)
+                # ★変更点: 1回の検索件数も、欲しい総数を上回りすぎないよう調整する
+                results = search_books(query, max_results=min(max_results, 5))
             except requests.exceptions.RequestException:
                 results = []
 
@@ -306,11 +312,12 @@ def run_search_agent(user_input: str) -> tuple[list[dict], list[str]]:
                 }
             )
 
-        # ★変更点: 十分な件数が集まっていたら、次のループでLLMに終了を促すメッセージを追加する
-        if len(collected_books) >= ENOUGH_BOOKS_COUNT:
+        # ★変更点: ユーザーが指定した件数(max_results)に達していたら、終了を促すメッセージを追加する
+        if len(collected_books) >= max_results:
             messages.append({"role": "user", "content": "十分な件数が集まりました。検索を終了してください。"})
 
-    return list(collected_books.values())[:10], queries_used
+    # ★変更点: 最終的に返す件数も、ユーザーが指定したmax_resultsに合わせる(以前は固定で10件だった)
+    return list(collected_books.values())[:max_results], queries_used
 
 
 def get_recommendations(categories: list[str], exclude_title: str, max_results: int = 4) -> list[dict]:
@@ -617,6 +624,8 @@ def search():
     Function Callingによる検索エージェント(run_search_agent)に置き換えた。
     LLMが自律的に検索回数・キーワードを判断する。
     価格取得・おすすめ取得は引き続き詳細ページで行う。
+
+    ★変更点: 検索結果の件数をユーザーが選べるようにした。
     """
     query = request.args.get("q", "")
 
@@ -624,8 +633,19 @@ def search():
         history = session.get("search_history", [])
         return render_template("index.html", error="検索キーワードを入力してください", history=history)
 
+    # ★変更点: フォームから送られてきた件数を取得する。
+    # 数値に変換できない・許可されていない値が来た場合は、デフォルト件数に落ち着かせる
+    # (URLを直接書き換えて変な値を送ってくるケースへの対策でもある)
+    try:
+        max_results = int(request.args.get("max_results", DEFAULT_MAX_RESULTS))
+    except ValueError:
+        max_results = DEFAULT_MAX_RESULTS
+
+    if max_results not in ALLOWED_MAX_RESULTS:
+        max_results = DEFAULT_MAX_RESULTS
+
     # ★変更点: エージェントに検索を任せる。戻り値は(本のリスト, 使ったキーワードのリスト)
-    books, queries_used = run_search_agent(query)
+    books, queries_used = run_search_agent(query, max_results=max_results)
 
     add_to_history(query)
 
@@ -637,6 +657,7 @@ def search():
         books=books,
         error=None,
         queries_used=queries_used,
+        max_results=max_results,  # ★変更点: 画面側で「〇件表示中」のように使えるよう渡す
     )
 
 
