@@ -57,7 +57,11 @@ MAX_LIBRARY_SYSTEMS = 3
 YAHOO_APP_ID = os.getenv("YAHOO_APP_ID")
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 CALIL_APP_KEY = os.getenv("CALIL_APP_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # ★変更点
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# ★変更点: 楽天ブックスAPI(価格比較に追加するため)
+RAKUTEN_APPLICATION_ID = os.getenv("RAKUTEN_APPLICATION_ID")
+RAKUTEN_ACCESS_KEY = os.getenv("RAKUTEN_ACCESS_KEY")
+RAKUTEN_AFFILIATE_ID = os.getenv("RAKUTEN_AFFILIATE_ID")
 
 # ★変更点: OpenAI APIのクライアントをここで1回だけ作っておき、使い回す
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
@@ -375,15 +379,58 @@ def search_yahoo_prices(title: str, max_results: int = 3) -> list[dict]:
     return offers
 
 
+# ★変更点: 楽天ブックスAPIから価格情報を取得する関数。
+# search_yahoo_prices()と全く同じ形の辞書(source/price/url/store_name)を
+# 返すよう揃えてあるので、get_price_offers()側は「何のサイトか」を
+# 意識せずそのまま合算・ソートできる。
+def search_rakuten_prices(title: str, max_results: int = 3) -> list[dict]:
+    """
+    楽天ブックス書籍検索APIで、本のタイトルから価格情報を複数件取得する。
+
+    Args:
+        title: 本のタイトル(検索キーワードとして使う)
+        max_results: 取得する商品件数
+
+    Returns:
+        価格情報の辞書のリスト(価格の安い順)。見つからなければ空リスト。
+    """
+    url = "https://openapi.rakuten.co.jp/services/api/BooksBook/Search/20170404"
+    params = {
+        "format": "json",
+        "title": title,
+        "applicationId": RAKUTEN_APPLICATION_ID,
+        "accessKey": RAKUTEN_ACCESS_KEY,
+        "affiliateId": RAKUTEN_AFFILIATE_ID,
+        "hits": max_results,
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+
+    items = data.get("Items", [])
+
+    offers = [
+        {
+            "source": "楽天ブックス",
+            "price": item_wrapper.get("Item", {}).get("itemPrice"),
+            "url": item_wrapper.get("Item", {}).get("itemUrl", ""),
+            # ★変更点: 楽天ブックスは単一の店舗(楽天ブックス自身)からの販売なので、
+            # Yahoo!のような複数店舗名の代わりに固定の店舗名を入れる
+            "store_name": "楽天ブックス",
+        }
+        for item_wrapper in items
+        if item_wrapper.get("Item", {}).get("itemPrice") is not None
+    ]
+
+    offers.sort(key=lambda offer: offer["price"])
+
+    return offers
+
+
 # ★変更点: 価格比較の「窓口」となる関数。
 # book_detail()はこの関数だけを呼べばよく、中でどのサイトを何個問い合わせるかは
 # ここに集約される。
-#
-# 今はYahoo!ショッピングだけを呼んでいるが、将来 楽天市場 や 他のECサイト を
-# 追加するときは、ここに
-#     offers += search_rakuten_prices(title)
-# のような行を1行足すだけで済むようにするための設計。
-# book_detail()側やテンプレート側は変更不要になる。
 def get_price_offers(title: str) -> list[dict]:
     """
     複数の価格情報ソースから商品を取得し、まとめて安い順に返す。
@@ -401,11 +448,11 @@ def get_price_offers(title: str) -> list[dict]:
     except requests.exceptions.RequestException as e:
         print(f"[エラー] Yahoo!ショッピングの価格取得に失敗しました: {e}")
 
-    # ★今後ここに他サイトの検索を追記していく想定
-    # try:
-    #     offers += search_rakuten_prices(title)
-    # except requests.exceptions.RequestException as e:
-    #     print(f"[エラー] 楽天市場の価格取得に失敗しました: {e}")
+    # ★変更点: 予告していた通り、1行追加するだけで楽天ブックスを合算できる
+    try:
+        offers += search_rakuten_prices(title)
+    except requests.exceptions.RequestException as e:
+        print(f"[エラー] 楽天ブックスの価格取得に失敗しました: {e}")
 
     offers.sort(key=lambda offer: offer["price"])
 
