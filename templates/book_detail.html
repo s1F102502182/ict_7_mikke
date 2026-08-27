@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>{% if book %}{{ book.title }}{% else %}本の詳細{% endif %} - Mikke</title>
+    <title>{% if book %}{{ book.title }}{% else %}本の詳細{% endif %} - OptiBook</title>
     <style>
         body {
             font-family: sans-serif;
@@ -219,78 +219,300 @@
 
         <!-- タブ2: 図書館貸出状況パネル -->
         <div class="tab-panel" id="tab-panel-library">
+
             {% if library_area %}
+
             <p class="library-area">
-                設定中の地域: {{ library_area.pref }}{% if library_area.city %} {{ library_area.city }}{% endif %}
-                <a class="library-setting-link" href="/library-setting">(変更する)</a>
+                設定中の地域:
+                {{ library_area.pref }}
+                {% if library_area.city %}
+                    {{ library_area.city }}
+                {% endif %}
+
+                <!--
+                    ★今回の変更点
+                    地域を変更したあとも「図書館で借りる」タブに戻るよう
+                    next に ?tab=library を付ける
+                -->
+                <a
+                    class="library-setting-link"
+                    href="{{ url_for(
+                        'library_setting',
+                        next=request.path ~ '?tab=library'
+                    ) }}"
+                >
+                    (変更する)
+                </a>
             </p>
+
             {% endif %}
+
 
             {% if not library_area %}
+
                 <!-- 地域未設定のときの案内ボックス -->
                 <div style="margin-top: 10px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; text-align: center;">
-                    <p style="margin-top: 0; margin-bottom: 15px; color: #333;">お住まいの地域を設定すると、<br>近くの図書館の貸出状況を確認できるようになります。</p>
-                    <a href="/library-setting?next={{ request.path }}" style="display: inline-block; padding: 10px 20px; background-color: #333; color: #fff; text-decoration: none; border-radius: 6px; font-size: 0.9em;">
+
+                    <p style="margin-top: 0; margin-bottom: 15px; color: #333;">
+                        お住まいの地域を設定すると、<br>
+                        近くの図書館の貸出状況を確認できるようになります。
+                    </p>
+
+                    <!--
+                        ★今回の変更点
+                        以前:
+                        /library-setting?next={{ request.path }}
+
+                        ↓
+
+                        設定完了後に
+                        /book/<id>?tab=library
+                        へ戻るようにする
+                    -->
+
+                    <a
+                        href="{{ url_for(
+                            'library_setting',
+                            next=request.path ~ '?tab=library'
+                        ) }}"
+                        style="display: inline-block; padding: 10px 20px; background-color: #333; color: #fff; text-decoration: none; border-radius: 6px; font-size: 0.9em;"
+                    >
                         図書館の地域を設定する
                     </a>
+
                 </div>
+
+
             {% elif not has_isbn %}
-                <p>この本はISBN情報が登録されていないため、図書館の貸出状況を確認できません。</p>
+
+                <p>
+                    この本はISBN情報が登録されていないため、
+                    図書館の貸出状況を確認できません。
+                </p>
+
+
             {% elif library_results is none %}
-                <p>図書館の貸出状況の取得に失敗しました。時間をおいて再度お試しください。</p>
+
+                <p>
+                    図書館の貸出状況の取得に失敗しました。
+                    時間をおいて再度お試しください。
+                </p>
+
+
             {% elif library_results.timed_out %}
-                <p>図書館の検索に時間がかかっています。少し待ってから再読み込みしてみてください。</p>
+
+                <p>
+                    図書館の検索に時間がかかっています。
+                    少し待ってから再読み込みしてみてください。
+                </p>
+
+
             {% elif library_results.libraries|length == 0 %}
-                <p>設定した図書館では蔵書情報が見つかりませんでした。</p>
+
+                <p>
+                    設定した図書館では蔵書情報が見つかりませんでした。
+                </p>
+
+
             {% else %}
+
                 {% for lib in library_results.libraries %}
+
                 <div class="library-item">
-                    <span>{{ lib.name }}</span>
+
+                    <span>
+                        {{ lib.name }}
+                    </span>
+
                     {% if lib.status in ["OK", "貸出可", "蔵書あり"] %}
-                        <span class="library-status-ok">{{ lib.status }}</span>
+
+                        <span class="library-status-ok">
+                            {{ lib.status }}
+                        </span>
+
                     {% else %}
-                        <span class="library-status-ng">{{ lib.status }}</span>
+
+                        <span class="library-status-ng">
+                            {{ lib.status }}
+                        </span>
+
                     {% endif %}
+
                 </div>
+
                 {% endfor %}
-                <p><a class="library-setting-link" href="/library-setting">図書館の地域を変更する</a></p>
+
+
+                <p>
+
+                    <!--
+                        ★今回の変更点
+                        ここから地域変更した場合も
+                        図書館タブへ戻る
+                    -->
+
+                    <a
+                        class="library-setting-link"
+                        href="{{ url_for(
+                            'library_setting',
+                            next=request.path ~ '?tab=library'
+                        ) }}"
+                    >
+                        図書館の地域を変更する
+                    </a>
+
+                </p>
+
             {% endif %}
+
         </div>
+
 
         {% if recommendations %}
+
         <div class="recommendations">
-            <h2>この本が気になった人へのおすすめ</h2>
+
+            <h2>
+                この本が気になった人へのおすすめ
+            </h2>
+
             <div class="rec-grid">
+
                 {% for rec in recommendations %}
+
                 <div class="rec-card">
+
                     <a href="/book/{{ rec.id }}">
+
                         {% if rec.thumbnail %}
-                            <img src="{{ rec.thumbnail }}" alt="{{ rec.title }}">
+
+                            <img
+                                src="{{ rec.thumbnail }}"
+                                alt="{{ rec.title }}"
+                            >
+
                         {% endif %}
-                        <p>{{ rec.title }}</p>
+
+                        <p>
+                            {{ rec.title }}
+                        </p>
+
                     </a>
+
                 </div>
+
                 {% endfor %}
+
             </div>
+
         </div>
+
         {% endif %}
+
+
     {% endif %}
 
-    <!-- ★変更点: タブ切り替え用のJavaScript。ページ遷移せず、表示を切り替えるだけのシンプルな仕組み -->
-    <script>
-        function showTab(tabName) {
-            // 一旦全部のタブ・パネルからactiveクラスを外す
-            document.querySelectorAll('.tab-button').forEach(function(btn) {
-                btn.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-panel').forEach(function(panel) {
-                panel.classList.remove('active');
-            });
 
-            // クリックされたタブとそれに対応するパネルだけにactiveクラスをつける
-            document.getElementById('tab-btn-' + tabName).classList.add('active');
-            document.getElementById('tab-panel-' + tabName).classList.add('active');
+
+    <!--
+        ★変更点:
+        タブ切り替え用JavaScript
+    -->
+
+    <script>
+
+        function showTab(tabName) {
+
+            // 一旦全部のタブ・パネルからactiveクラスを外す
+            document
+                .querySelectorAll('.tab-button')
+                .forEach(function(btn) {
+
+                    btn.classList.remove(
+                        'active'
+                    );
+
+                });
+
+
+            document
+                .querySelectorAll('.tab-panel')
+                .forEach(function(panel) {
+
+                    panel.classList.remove(
+                        'active'
+                    );
+
+                });
+
+
+            // クリックされたタブと
+            // 対応するパネルだけactiveにする
+
+            document
+                .getElementById(
+                    'tab-btn-' + tabName
+                )
+                .classList.add(
+                    'active'
+                );
+
+
+            document
+                .getElementById(
+                    'tab-panel-' + tabName
+                )
+                .classList.add(
+                    'active'
+                );
+
         }
+
+
+
+        /*
+            ★今回追加する処理
+
+            URLが
+
+            /book/xxxx?tab=library
+
+            だった場合、
+            ページ読み込み後に
+            「図書館で借りる」を表示する。
+        */
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            function() {
+
+                const params =
+                    new URLSearchParams(
+                        window.location.search
+                    );
+
+
+                const initialTab =
+                    params.get(
+                        'tab'
+                    );
+
+
+                if (
+                    initialTab === 'library'
+                ) {
+
+                    showTab(
+                        'library'
+                    );
+
+                }
+
+            }
+        );
+
     </script>
+
+
 </body>
 </html>
