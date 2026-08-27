@@ -613,9 +613,71 @@ def add_to_history(query: str) -> None:
 def index():
     """トップページ(検索フォーム)を表示する"""
     history = session.get("search_history", [])
-    # ★変更点: 現在設定されている地域を画面に表示できるよう渡す
+
+    # 現在設定されている地域
     library_area = session.get("library_area")
-    return render_template("index.html", history=history, library_area=library_area)
+
+    # 地域設定の履歴
+    library_area_history = session.get(
+        "library_area_history",
+        []
+    )
+
+    # この履歴機能を追加する前から
+    # 地域設定済みだった場合にも対応する
+    #
+    # 現在設定されている地域が履歴に無ければ、
+    # 現在のlibrary_systemsと一緒に履歴へ登録する
+    if library_area:
+
+        current_systems = session.get(
+            "library_systems",
+            []
+        )
+
+        pref = library_area.get(
+            "pref",
+            ""
+        )
+
+        city = library_area.get(
+            "city",
+            ""
+        )
+
+        already_saved = any(
+            area.get("pref") == pref
+            and
+            area.get("city") == city
+            for area in library_area_history
+        )
+
+        if not already_saved:
+
+            library_area_history.insert(
+                0,
+                {
+                    "pref": pref,
+                    "city": city,
+                    "systems": current_systems,
+                }
+            )
+
+            library_area_history = (
+                library_area_history[:5]
+            )
+
+            session[
+                "library_area_history"
+            ] = library_area_history
+
+
+    return render_template(
+        "index.html",
+        history=history,
+        library_area=library_area,
+        library_area_history=library_area_history,
+    )
 
 
 @app.route("/search")
@@ -628,89 +690,598 @@ def search():
 
     ★変更点: 検索結果の件数をユーザーが選べるようにした。
     """
-    query = request.args.get("q", "")
+
+    query = request.args.get(
+        "q",
+        ""
+    )
+
 
     if not query:
-        history = session.get("search_history", [])
-        return render_template("index.html", error="検索キーワードを入力してください", history=history)
 
-    # ★変更点: フォームから送られてきた件数を取得する。
-    # 数値に変換できない・許可されていない値が来た場合は、デフォルト件数に落ち着かせる
-    # (URLを直接書き換えて変な値を送ってくるケースへの対策でもある)
+        history = session.get(
+            "search_history",
+            []
+        )
+
+        library_area = session.get(
+            "library_area"
+        )
+
+        library_area_history = session.get(
+            "library_area_history",
+            []
+        )
+
+        return render_template(
+            "index.html",
+            error="検索キーワードを入力してください",
+            history=history,
+            library_area=library_area,
+            library_area_history=library_area_history,
+        )
+
+
+    # フォームから送られてきた件数を取得
     try:
-        max_results = int(request.args.get("max_results", DEFAULT_MAX_RESULTS))
+
+        max_results = int(
+            request.args.get(
+                "max_results",
+                DEFAULT_MAX_RESULTS
+            )
+        )
+
     except ValueError:
-        max_results = DEFAULT_MAX_RESULTS
 
-    if max_results not in ALLOWED_MAX_RESULTS:
-        max_results = DEFAULT_MAX_RESULTS
+        max_results = (
+            DEFAULT_MAX_RESULTS
+        )
 
-    # ★変更点: エージェントに検索を任せる。戻り値は(本のリスト, 使ったキーワードのリスト)
-    books, queries_used = run_search_agent(query, max_results=max_results)
 
-    add_to_history(query)
+    if (
+        max_results
+        not in
+        ALLOWED_MAX_RESULTS
+    ):
 
-    # ★変更点: 画面に「元の入力」と「AIが実際に使った検索キーワード(複数の場合あり)」を渡し、
-    # エージェントが何回・どんなキーワードで検索したかが見えるようにする(透明性のため)
+        max_results = (
+            DEFAULT_MAX_RESULTS
+        )
+
+
+    # エージェントに検索を任せる
+    books, queries_used = (
+        run_search_agent(
+            query,
+            max_results=max_results
+        )
+    )
+
+
+    add_to_history(
+        query
+    )
+
+
     return render_template(
         "display.html",
         query=query,
         books=books,
         error=None,
         queries_used=queries_used,
-        max_results=max_results,  # ★変更点: 画面側で「〇件表示中」のように使えるよう渡す
+        max_results=max_results,
     )
 
 
-# ★変更点: 図書館の地域を設定するページ(GET: フォーム表示 / POST: 保存)
-@app.route("/library-setting", methods=["GET", "POST"])
+# ==========================================================
+# 図書館の地域設定
+# ==========================================================
+
+@app.route(
+    "/library-setting",
+    methods=[
+        "GET",
+        "POST"
+    ]
+)
 def library_setting():
     """
-    ユーザーの都道府県・市区町村を受け取り、カーリルAPIで近くの図書館システムを
-    検索して、そのシステムIDをセッションに保存する。
-    一度設定すれば、以降は本の詳細ページで毎回この地域の図書館が使われる。
-
-    ★変更点: "next"パラメータを受け取れるようにした。
-    book_detail()から「未設定だから設定画面へ」と飛ばされてきた場合、
-    設定完了後に元の本の詳細ページへ自動で戻れるようにするため。
+    ユーザーの都道府県・市区町村を受け取り、
+    カーリルAPIで近くの図書館システムを検索して
+    セッションに保存する。
     """
-    # ★変更点: どこから来たか(次にどこへ戻るか)を、フォームの隠しフィールド経由で引き継ぐ
-    next_url = request.values.get("next", url_for("index"))
+
+    next_url = request.values.get(
+        "next",
+        url_for(
+            "index"
+        )
+    )
+
+
+    # ======================================================
+    # GET
+    # ======================================================
 
     if request.method == "GET":
-        current_systems = session.get("library_systems", [])
-        library_area = session.get("library_area")  # ★変更点: 現在の設定地域も渡す
-        return render_template("library_setting.html", current_systems=current_systems, error=None, next_url=next_url, library_area=library_area)
 
-    # POST: フォームから送られてきた都道府県・市区町村で図書館システムを検索
-    pref = request.form.get("pref", "")
-    city = request.form.get("city", "")
+        current_systems = session.get(
+            "library_systems",
+            []
+        )
+
+        library_area = session.get(
+            "library_area"
+        )
+
+        return render_template(
+            "library_setting.html",
+            current_systems=current_systems,
+            error=None,
+            next_url=next_url,
+            library_area=library_area,
+        )
+
+
+    # ======================================================
+    # POST
+    # ======================================================
+
+    pref = request.form.get(
+        "pref",
+        ""
+    )
+
+    city = request.form.get(
+        "city",
+        ""
+    )
+
 
     if not pref:
-        return render_template("library_setting.html", current_systems=[], error="都道府県を入力してください", next_url=next_url)
+
+        return render_template(
+            "library_setting.html",
+            current_systems=[],
+            error="都道府県を入力してください",
+            next_url=next_url,
+        )
+
 
     try:
-        libraries = search_library_systems(pref, city)
+
+        libraries = search_library_systems(
+            pref,
+            city
+        )
+
     except requests.exceptions.RequestException as e:
-        return render_template("library_setting.html", current_systems=[], error=str(e), next_url=next_url)
 
-    # 同じsystemidが複数の図書館(分館)に対応していることがあるため、重複を除去
+        return render_template(
+            "library_setting.html",
+            current_systems=[],
+            error=str(e),
+            next_url=next_url,
+        )
+
+
+    # ======================================================
+    # systemidの重複を削除
+    # ======================================================
+
     seen = set()
+
     unique_systems = []
+
+
     for lib in libraries:
-        sid = lib.get("systemid")
-        if sid and sid not in seen:
-            seen.add(sid)
-            unique_systems.append({"systemid": sid, "systemname": lib.get("systemname", sid)})
 
-    selected_systems = unique_systems[:MAX_LIBRARY_SYSTEMS]
-    session["library_systems"] = selected_systems
-    # ★変更点: 「今どこの地域が設定されているか」を画面に表示できるよう、
-    # 地域名(都道府県・市区町村)自体もセッションに保存しておく
-    session["library_area"] = {"pref": pref, "city": city}
+        sid = lib.get(
+            "systemid"
+        )
 
-    # ★変更点: 保存が完了したら、確認画面を挟まずに元のページ(next_url)へ自動で戻る
-    return redirect(next_url)
+        if (
+            sid
+            and
+            sid not in seen
+        ):
+
+            seen.add(
+                sid
+            )
+
+            unique_systems.append({
+                "systemid":
+                    sid,
+
+                "systemname":
+                    lib.get(
+                        "systemname",
+                        sid
+                    ),
+            })
+
+
+    selected_systems = (
+        unique_systems[
+            :MAX_LIBRARY_SYSTEMS
+        ]
+    )
+
+
+    # ======================================================
+    # 現在の地域として保存
+    # ======================================================
+
+    session[
+        "library_systems"
+    ] = selected_systems
+
+
+    session[
+        "library_area"
+    ] = {
+        "pref":
+            pref,
+
+        "city":
+            city,
+    }
+
+
+    # ======================================================
+    # 地域履歴として保存
+    # ======================================================
+    #
+    # 重要:
+    #
+    # 地域名だけではなく、
+    # その地域で検索した図書館システムも保存する。
+    #
+    # これにより履歴をクリックしたときに
+    # カーリルAPIをもう一度呼ぶ必要がなくなり、
+    # ほぼ一瞬で地域変更できる。
+    # ======================================================
+
+    library_area_history = session.get(
+        "library_area_history",
+        []
+    )
+
+
+    # 同じ地域が既にある場合は一度削除
+    library_area_history = [
+
+        area
+
+        for area
+        in library_area_history
+
+        if not (
+
+            area.get(
+                "pref"
+            ) == pref
+
+            and
+
+            area.get(
+                "city"
+            ) == city
+
+        )
+
+    ]
+
+
+    # 最新地域を先頭へ追加
+    library_area_history.insert(
+        0,
+        {
+            "pref":
+                pref,
+
+            "city":
+                city,
+
+            "systems":
+                selected_systems,
+        }
+    )
+
+
+    # 最大5件
+    session[
+        "library_area_history"
+    ] = (
+        library_area_history[:5]
+    )
+
+
+    return redirect(
+        next_url
+    )
+
+
+# ==========================================================
+# 履歴から地域を即時適用
+# ==========================================================
+
+@app.route(
+    "/library-setting/quick",
+    methods=[
+        "POST"
+    ]
+)
+def library_setting_quick():
+
+    pref = request.form.get(
+        "pref",
+        ""
+    )
+
+    city = request.form.get(
+        "city",
+        ""
+    )
+
+
+    if not pref:
+
+        return redirect(
+            url_for(
+                "index"
+            )
+        )
+
+
+    library_area_history = session.get(
+        "library_area_history",
+        []
+    )
+
+
+    # ======================================================
+    # クリックされた地域を履歴から探す
+    # ======================================================
+
+    selected_area = next(
+
+        (
+
+            area
+
+            for area
+            in library_area_history
+
+            if (
+
+                area.get(
+                    "pref"
+                ) == pref
+
+                and
+
+                area.get(
+                    "city"
+                ) == city
+
+            )
+
+        ),
+
+        None,
+
+    )
+
+
+    # ======================================================
+    # 保存済みの図書館システムを使用
+    # ======================================================
+    #
+    # systemsまで履歴に保存してあるため、
+    # カーリルAPIを呼び直さなくてよい。
+    # ======================================================
+
+    if (
+        selected_area
+        and
+        selected_area.get(
+            "systems"
+        )
+        is not None
+    ):
+
+        selected_systems = (
+            selected_area.get(
+                "systems",
+                []
+            )
+        )
+
+
+    else:
+
+        # ==================================================
+        # 古い履歴への対応
+        # ==================================================
+        #
+        # 過去バージョンで作った履歴には
+        # systemsが保存されていない可能性がある。
+        #
+        # その場合だけカーリルAPIを使う。
+        # ==================================================
+
+        try:
+
+            libraries = (
+                search_library_systems(
+                    pref,
+                    city
+                )
+            )
+
+        except requests.exceptions.RequestException:
+
+            return redirect(
+                url_for(
+                    "index"
+                )
+            )
+
+
+        seen = set()
+
+        unique_systems = []
+
+
+        for lib in libraries:
+
+            sid = lib.get(
+                "systemid"
+            )
+
+            if (
+                sid
+                and
+                sid not in seen
+            ):
+
+                seen.add(
+                    sid
+                )
+
+                unique_systems.append({
+                    "systemid":
+                        sid,
+
+                    "systemname":
+                        lib.get(
+                            "systemname",
+                            sid
+                        ),
+                })
+
+
+        selected_systems = (
+            unique_systems[
+                :MAX_LIBRARY_SYSTEMS
+            ]
+        )
+
+
+    # ======================================================
+    # 現在地域を即時変更
+    # ======================================================
+
+    session[
+        "library_area"
+    ] = {
+        "pref":
+            pref,
+
+        "city":
+            city,
+    }
+
+
+    session[
+        "library_systems"
+    ] = selected_systems
+
+
+    # ======================================================
+    # 選択した地域を履歴の先頭へ
+    # ======================================================
+
+    library_area_history = [
+
+        area
+
+        for area
+        in library_area_history
+
+        if not (
+
+            area.get(
+                "pref"
+            ) == pref
+
+            and
+
+            area.get(
+                "city"
+            ) == city
+
+        )
+
+    ]
+
+
+    library_area_history.insert(
+        0,
+        {
+            "pref":
+                pref,
+
+            "city":
+                city,
+
+            "systems":
+                selected_systems,
+        }
+    )
+
+
+    session[
+        "library_area_history"
+    ] = (
+        library_area_history[:5]
+    )
+
+
+    return redirect(
+        url_for(
+            "index"
+        )
+    )
+
+
+# ==========================================================
+# 現在の地域設定を解除
+# ==========================================================
+#
+# 履歴は削除しない。
+#
+# そのため解除後でも
+# 「地域履歴」から再設定できる。
+# ==========================================================
+
+@app.route(
+    "/library-setting/reset",
+    methods=[
+        "POST"
+    ]
+)
+def library_setting_reset():
+
+    session.pop(
+        "library_area",
+        None
+    )
+
+    session.pop(
+        "library_systems",
+        None
+    )
+
+
+    return redirect(
+        url_for(
+            "index"
+        )
+    )
 
 
 @app.route("/book/<book_id>")

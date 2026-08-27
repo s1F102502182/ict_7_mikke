@@ -13,6 +13,276 @@
 
     <style>
 
+        /* =========================================
+   AREA HISTORY MENU
+========================================= */
+
+.area-menu {
+
+    position:
+        relative;
+
+}
+
+
+.area-badge {
+
+    border:
+        1px solid transparent;
+
+    cursor:
+        pointer;
+
+    font-family:
+        inherit;
+
+}
+
+
+.area-badge:hover {
+
+    border-color:
+        #cfdace;
+
+}
+
+
+.area-arrow {
+
+    margin-left:
+        6px;
+
+    font-size:
+        9px;
+
+}
+
+
+.area-dropdown {
+
+    position:
+        absolute;
+
+    top:
+        calc(100% + 9px);
+
+    right:
+        0;
+
+    width:
+        240px;
+
+    padding:
+        8px;
+
+    display:
+        none;
+
+    background:
+        var(--surface);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        6px;
+
+    box-shadow:
+        var(--shadow);
+
+    z-index:
+        300;
+
+}
+
+
+.area-dropdown.active {
+
+    display:
+        block;
+
+}
+
+
+.area-dropdown-title {
+
+    margin:
+        5px 8px 7px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
+}
+
+
+.area-dropdown form {
+
+    margin:
+        0;
+
+}
+
+
+.area-history-item {
+
+    width:
+        100%;
+
+    padding:
+        10px 11px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        10px;
+
+    border:
+        none;
+
+    border-radius:
+        4px;
+
+    background:
+        transparent;
+
+    color:
+        var(--text);
+
+    text-align:
+        left;
+
+    font-size:
+        12px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.area-history-item:hover {
+
+    background:
+        var(--green-light);
+
+    color:
+        var(--green);
+
+}
+
+
+.current-mark {
+
+    padding:
+        2px 5px;
+
+    border:
+        1px solid
+        #cfdace;
+
+    border-radius:
+        3px;
+
+    color:
+        var(--green);
+
+    font-size:
+        9px;
+
+}
+
+
+.area-new-setting {
+
+    display:
+        block;
+
+    margin-top:
+        5px;
+
+    padding:
+        11px;
+
+    border-top:
+        1px solid var(--border);
+
+    color:
+        var(--green);
+
+    font-size:
+        12px;
+
+}
+
+
+.area-new-setting:hover {
+
+    background:
+        var(--green-light);
+
+}
+
+
+.reset-form {
+
+    margin:
+        0;
+
+}
+
+
+.area-reset-button {
+
+    width:
+        100%;
+
+    padding:
+        10px 11px;
+
+    border:
+        none;
+
+    border-top:
+        1px solid var(--border);
+
+    border-radius:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        #9d3e3e;
+
+    text-align:
+        left;
+
+    font-size:
+        11px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.area-reset-button:hover {
+
+    background:
+        #fff1f1;
+
+}
+
         :root {
             --background: #f7f5ef;
             --surface: #ffffff;
@@ -807,6 +1077,8 @@
 
         }
 
+                        
+
     </style>
 
 </head>
@@ -828,20 +1100,181 @@
     <div class="header-right">
 
 
-        {% if library_area %}
+{% if library_area or library_area_history %}
 
-        <span class="area-badge">
+<div class="area-menu">
 
-            📍
-            {{ library_area.pref }}
 
-            {% if library_area.city %}
-                {{ library_area.city }}
-            {% endif %}
+    <button
+        type="button"
+        class="area-badge"
+        id="area-menu-button"
+    >
+
+    {% if library_area %}
+
+        📍
+
+        {{ library_area.pref }}
+
+        {% if library_area.city %}
+
+            {{ library_area.city }}
+
+        {% endif %}
+
+    {% else %}
+
+        地域履歴
+
+    {% endif %}
+
+
+        <span class="area-arrow">
+
+            ▾
 
         </span>
 
+
+    </button>
+
+
+
+    <div
+        class="area-dropdown"
+        id="area-dropdown"
+    >
+
+
+        {% if library_area_history %}
+
+
+            <p class="area-dropdown-title">
+
+                最近設定した地域
+
+            </p>
+
+
+            {% for area in library_area_history %}
+
+
+            <form
+                action="{{ url_for(
+                    'library_setting_quick'
+                ) }}"
+                method="POST"
+            >
+
+
+                <input
+                    type="hidden"
+                    name="pref"
+                    value="{{ area.pref }}"
+                >
+
+
+                <input
+                    type="hidden"
+                    name="city"
+                    value="{{ area.city }}"
+                >
+
+
+                <button
+                    type="submit"
+                    class="area-history-item"
+                >
+
+                    {{ area.pref }}
+
+                    {% if area.city %}
+
+                        {{ area.city }}
+
+                    {% endif %}
+
+
+                    {% if (
+                        library_area
+                        and
+                        area.pref
+                        ==
+                        library_area.pref
+                        and
+                        area.city
+                        ==
+                        library_area.city
+                    ) %}
+
+                        <span class="current-mark">
+
+                            現在
+
+                        </span>
+
+                    {% endif %}
+
+
+                </button>
+
+
+            </form>
+
+
+            {% endfor %}
+
+
         {% endif %}
+
+
+
+        <a
+            href="{{ url_for(
+                'library_setting'
+            ) }}"
+            class="area-new-setting"
+        >
+
+            ＋ 新しい地域を設定
+
+        </a>
+
+
+
+        {% if library_area %}
+
+        <form
+            action="{{ url_for(
+                'library_setting_reset'
+            ) }}"
+            method="POST"
+            class="reset-form"
+        >
+
+
+            <button
+                type="submit"
+                class="area-reset-button"
+            >
+
+                地域設定を解除
+
+            </button>
+
+
+        </form>
+
+        {% endif %}
+
+
+    </div>
+
+
+</div>
+
+{% endif %}
 
 
         <a
@@ -1099,6 +1532,11 @@
 
 <script>
 
+
+    /* ======================================
+       SEARCH EXAMPLES
+    ======================================= */
+
     const input =
         document.getElementById(
             "search-input"
@@ -1129,6 +1567,107 @@
 
 
         });
+
+
+
+    /* ======================================
+       AREA HISTORY
+    ======================================= */
+
+    const areaMenuButton =
+        document.getElementById(
+            "area-menu-button"
+        );
+
+
+    const areaDropdown =
+        document.getElementById(
+            "area-dropdown"
+        );
+
+
+    if (
+        areaMenuButton
+        &&
+        areaDropdown
+    ) {
+
+
+        /*
+            右上の
+
+            📍 東京都 渋谷区 ▾
+
+            または
+
+            地域履歴 ▾
+
+            をクリックしたときに
+            履歴メニューを開閉する。
+        */
+
+        areaMenuButton.addEventListener(
+            "click",
+            function(event) {
+
+
+                event.stopPropagation();
+
+
+                areaDropdown
+                    .classList
+                    .toggle(
+                        "active"
+                    );
+
+
+            }
+        );
+
+
+
+        /*
+            プルダウン内をクリックしたときに
+            document側のclickイベントへ
+            伝播しないようにする。
+        */
+
+        areaDropdown.addEventListener(
+            "click",
+            function(event) {
+
+
+                event.stopPropagation();
+
+
+            }
+        );
+
+
+
+        /*
+            メニュー以外をクリックしたら
+            プルダウンを閉じる。
+        */
+
+        document.addEventListener(
+            "click",
+            function() {
+
+
+                areaDropdown
+                    .classList
+                    .remove(
+                        "active"
+                    );
+
+
+            }
+        );
+
+
+    }
+
 
 </script>
 
