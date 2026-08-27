@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>図書館の設定 - Mikke</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 0 20px;
+        }
+        a.back {
+            text-decoration: none;
+            color: #333;
+        }
+        h1 {
+            font-size: 1.4em;
+            margin-top: 20px;
+        }
+        p.desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        button {
+            padding: 10px;
+            font-size: 1em;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .error {
+            color: #c00;
+        }
+        .saved-message {
+            color: #080;
+            margin-top: 16px;
+        }
+        .current-systems {
+            margin-top: 20px;
+        }
+        .current-systems ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="/">← トップに戻る</a>
+    <h1>図書館の地域を設定</h1>
+    <p class="desc">お住まいの地域を入力すると、本の詳細ページで近くの図書館の貸出状況が確認できるようになります。</p>
+
+    <form action="/library-setting" method="post">
+        <!-- ★変更点: 設定完了後にどこへ戻るかを引き継ぐための隠しフィールド -->
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <input type="text" name="pref" placeholder="都道府県(例: 東京都)" required>
+        <input type="text" name="city" placeholder="市区町村(例: 渋谷区)※任意">
+        <button type="submit">この地域で設定する</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if saved %}
+        <p class="saved-message">設定を保存しました。</p>
+    {% endif %}
+
+    {% if library_area %}
+    <!-- ★変更点: 現在設定されている地域名を表示 -->
+    <p style="color: #666; font-size: 0.9em; margin-top: 10px;">
+        現在の設定: {{ library_area.pref }}{% if library_area.city %} {{ library_area.city }}{% endif %}
+    </p>
+    {% endif %}
+
+    {% if current_systems %}
+    <div class="current-systems">
+        <p>現在設定されている図書館システム:</p>
+        <ul>
+            {% for lib in current_systems %}
+            <li>{{ lib.systemname }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</body>
+</html>

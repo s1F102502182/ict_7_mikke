@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>検索結果 - Mikke</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        a.back {
+            text-decoration: none;
+            color: #333;
+        }
+        h1 {
+            font-size: 1.3em;
+        }
+        /* ★変更点: 本1件全体をリンクにするためのスタイル */
+        a.book-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .book {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .book:hover {
+            background: #fafafa;
+        }
+        .book img {
+            width: 80px;
+            height: auto;
+            flex-shrink: 0;
+        }
+        .book-title {
+            font-weight: bold;
+            margin: 0 0 4px 0;
+        }
+        .book-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin: 0 0 6px 0;
+        }
+        .book-desc {
+            font-size: 0.9em;
+            color: #333;
+        }
+        .error {
+            color: #c00;
+        }
+        /* ★変更点: AIの解釈結果を表示するスタイル */
+        .ai-note {
+            color: #666;
+            font-size: 0.85em;
+            background: #f0f4ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="/">← トップに戻る</a>
+    <h1>「{{ query }}」の検索結果</h1>
+    {% if queries_used %}
+    <!-- ★変更点: エージェントが実際に何回・どんなキーワードで検索したかを見せる(透明性のため) -->
+    <p class="ai-note">
+        AIエージェントが{{ queries_used|length }}回検索しました:
+        {% for q in queries_used %}「{{ q }}」{% if not loop.last %} → {% endif %}{% endfor %}
+    </p>
+    {% endif %}
+
+    {% if error %}
+        <p class="error">エラーが発生しました: {{ error }}</p>
+    {% elif books|length == 0 %}
+        <p>本が見つかりませんでした。</p>
+    {% else %}
+        {% for book in books %}
+        <!-- ★変更点: クリックすると /book/<id> の詳細ページに遷移する -->
+        <a class="book-link" href="/book/{{ book.id }}">
+            <div class="book">
+                {% if book.thumbnail %}
+                    <img src="{{ book.thumbnail }}" alt="{{ book.title }}">
+                {% endif %}
+                <div>
+                    <p class="book-title">{{ book.title }}</p>
+                    <p class="book-meta">{{ book.authors }}{% if book.published_date %} / {{ book.published_date }}{% endif %}</p>
+                    <p class="book-desc">{{ book.description }}{% if book.description_is_truncated %}...{% endif %}</p>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

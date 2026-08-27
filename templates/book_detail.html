@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if book %}{{ book.title }}{% else %}本の詳細{% endif %} - Mikke</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        a.back {
+            text-decoration: none;
+            color: #333;
+        }
+        .detail {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+        }
+        .detail img {
+            width: 160px;
+            height: auto;
+            flex-shrink: 0;
+        }
+        h1 {
+            font-size: 1.5em;
+            margin: 0 0 6px 0;
+        }
+        .meta {
+            color: #666;
+            font-size: 0.95em;
+            margin: 0 0 6px 0;
+        }
+        .desc {
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+        /* ★変更点: 価格比較・図書館検索を切り替えるタブのスタイル */
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 1em;
+            font-family: inherit;
+            color: #888;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            color: #333;
+            font-weight: bold;
+            border-bottom-color: #333;
+        }
+        .tab-panel {
+            display: none;
+            padding: 16px 0;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        /* ★変更点: モックアップにあった価格比較テーブルのスタイル */
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .price-table th {
+            text-align: left;
+            font-size: 0.85em;
+            color: #888;
+            font-weight: normal;
+            padding: 8px 4px;
+            border-bottom: 1px solid #eee;
+        }
+        .price-table td {
+            padding: 12px 4px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95em;
+        }
+        .price-table .price-cell {
+            font-weight: bold;
+        }
+        .cheapest-badge {
+            display: inline-block;
+            font-size: 0.75em;
+            color: #c00;
+            border: 1px solid #c00;
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin-right: 6px;
+        }
+        .buy-link {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+        .price-none {
+            color: #999;
+        }
+        .library-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 4px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+        }
+        .library-status-ok {
+            color: #080;
+            font-weight: bold;
+        }
+        .library-status-ng {
+            color: #999;
+        }
+        .library-setting-link {
+            font-size: 0.85em;
+            color: #06c;
+        }
+        .library-area {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .recommendations {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .recommendations h2 {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+        }
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+        }
+        .rec-card a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .rec-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .rec-card p {
+            font-size: 0.85em;
+            margin: 6px 0 0 0;
+        }
+        .error {
+            color: #c00;
+        }
+    </style>
+</head>
+<body>
+    <a class="back" href="javascript:history.back()">← 検索結果に戻る</a>
+
+    {% if error %}
+        <p class="error">エラーが発生しました: {{ error }}</p>
+    {% elif book %}
+        <div class="detail">
+            {% if book.thumbnail %}
+                <img src="{{ book.thumbnail }}" alt="{{ book.title }}">
+            {% endif %}
+            <div>
+                <h1>{{ book.title }}</h1>
+                <p class="meta">{{ book.authors }}{% if book.published_date %} / {{ book.published_date }}{% endif %}</p>
+                <p class="meta">{{ book.publisher }} / {{ book.page_count }}ページ</p>
+                <p class="desc">{{ book.description|safe }}{% if book.description_is_truncated %}...{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- ★変更点: 「価格を比べる」「図書館で借りる」をタブで切り替えるUI -->
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('price')" id="tab-btn-price">価格を比べる</button>
+            <button class="tab-button" onclick="showTab('library')" id="tab-btn-library">図書館で借りる</button>
+        </div>
+
+        <!-- タブ1: 価格比較パネル -->
+        <div class="tab-panel active" id="tab-panel-price">
+            {% if price_offers %}
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>ショップ</th>
+                            <th>価格</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for offer in price_offers %}
+                        <tr>
+                            <td>{{ offer.store_name }}<br><span style="color:#aaa; font-size:0.8em;">{{ offer.source }}</span></td>
+                            <td class="price-cell">
+                                {% if loop.first %}<span class="cheapest-badge">最安</span>{% endif %}
+                                ¥{{ "{:,}".format(offer.price) }}
+                            </td>
+                            <td><a class="buy-link" href="{{ offer.url }}" target="_blank">購入ページへ</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="price-none">価格情報が見つかりませんでした</p>
+            {% endif %}
+        </div>
+
+        <!-- タブ2: 図書館貸出状況パネル -->
+        <div class="tab-panel" id="tab-panel-library">
+            {% if library_area %}
+            <p class="library-area">
+                設定中の地域: {{ library_area.pref }}{% if library_area.city %} {{ library_area.city }}{% endif %}
+                <a class="library-setting-link" href="/library-setting">(変更する)</a>
+            </p>
+            {% endif %}
+            {% if not has_isbn %}
+                <p>この本はISBN情報が登録されていないため、図書館の貸出状況を確認できません。</p>
+            {% elif library_results is none %}
+                <p>図書館の貸出状況の取得に失敗しました。時間をおいて再度お試しください。</p>
+            {% elif library_results.timed_out %}
+                <p>図書館の検索に時間がかかっています。少し待ってから再読み込みしてみてください。</p>
+            {% elif library_results.libraries|length == 0 %}
+                <p>設定した図書館では蔵書情報が見つかりませんでした。</p>
+            {% else %}
+                {% for lib in library_results.libraries %}
+                <div class="library-item">
+                    <span>{{ lib.name }}</span>
+                    {% if lib.status in ["OK", "貸出可", "蔵書あり"] %}
+                        <span class="library-status-ok">{{ lib.status }}</span>
+                    {% else %}
+                        <span class="library-status-ng">{{ lib.status }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <p><a class="library-setting-link" href="/library-setting">図書館の地域を変更する</a></p>
+            {% endif %}
+        </div>
+
+        {% if recommendations %}
+        <div class="recommendations">
+            <h2>この本が気になった人へのおすすめ</h2>
+            <div class="rec-grid">
+                {% for rec in recommendations %}
+                <div class="rec-card">
+                    <a href="/book/{{ rec.id }}">
+                        {% if rec.thumbnail %}
+                            <img src="{{ rec.thumbnail }}" alt="{{ rec.title }}">
+                        {% endif %}
+                        <p>{{ rec.title }}</p>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- ★変更点: タブ切り替え用のJavaScript。ページ遷移せず、表示を切り替えるだけのシンプルな仕組み -->
+    <script>
+        function showTab(tabName) {
+            // 一旦全部のタブ・パネルからactiveクラスを外す
+            document.querySelectorAll('.tab-button').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-panel').forEach(function(panel) {
+                panel.classList.remove('active');
+            });
+
+            // クリックされたタブとそれに対応するパネルだけにactiveクラスをつける
+            document.getElementById('tab-btn-' + tabName).classList.add('active');
+            document.getElementById('tab-panel-' + tabName).classList.add('active');
+        }
+    </script>
+</body>
+</html>

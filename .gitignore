@@ -1,0 +1,12 @@
+# APIキーなどの秘密情報
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# エディタ・OS関連
+.vscode/
+.DS_Store
