@@ -66,6 +66,10 @@
 <body>
     <a class="back" href="/">← トップに戻る</a>
     <h1>「{{ query }}」の検索結果</h1>
+    {% if max_results %}
+    <!-- ★変更点: 何件表示の設定で検索したかを表示 -->
+    <p style="color:#888; font-size:0.85em;">最大{{ max_results }}件表示({{ books|length }}件ヒット)</p>
+    {% endif %}
     {% if queries_used %}
     <!-- ★変更点: エージェントが実際に何回・どんなキーワードで検索したかを見せる(透明性のため) -->
     <p class="ai-note">
