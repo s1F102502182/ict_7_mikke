@@ -1,130 +1,1251 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
-    <title>Mikke - 本探しアプリ</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mikke - 本との出会いをもっと自由に</title>
+
     <style>
+
+        :root {
+            --background: #f7f5ef;
+            --surface: #ffffff;
+
+            --text: #242424;
+            --muted: #74736d;
+
+            --green: #274c3a;
+            --green-hover: #1f3d2f;
+            --green-light: #e8efe9;
+
+            --border: #e3e0d8;
+
+            --shadow:
+                0 18px 45px
+                rgba(0, 0, 0, 0.06);
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
         body {
-            font-family: sans-serif;
-            max-width: 600px;
-            margin: 80px auto;
-            text-align: center;
-        }
-        h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        p.subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        form {
-            display: flex;
-            gap: 8px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        button {
-            padding: 12px 24px;
-            font-size: 1em;
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #555;
-        }
-        /* ★変更点: 件数選択プルダウンのスタイル */
-        select#max_results {
-            padding: 12px 8px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            background: white;
-        }
-        .error {
-            color: #c00;
-            margin-top: 10px;
-        }
-        /* ★変更点: 検索履歴表示用のスタイルを追加 */
-        .history {
-            margin-top: 30px;
-            text-align: left;
-        }
-        .history h2 {
-            font-size: 0.9em;
-            color: #888;
-            margin-bottom: 8px;
-        }
-        .history ul {
-            list-style: none;
-            padding: 0;
             margin: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+
+            background: var(--background);
+
+            color: var(--text);
+
+            font-family:
+                "Yu Gothic",
+                "Hiragino Kaku Gothic ProN",
+                sans-serif;
         }
-        .history li a {
-            display: inline-block;
-            padding: 6px 14px;
-            background: #f0f0f0;
-            border-radius: 20px;
-            color: #333;
+
+
+        a {
+            color: inherit;
             text-decoration: none;
-            font-size: 0.9em;
         }
-        .history li a:hover {
-            background: #e0e0e0;
+
+
+        button,
+        input,
+        select {
+            font: inherit;
         }
+
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+            height: 76px;
+
+            padding: 0 6%;
+
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            border-bottom:
+                1px solid var(--border);
+
+            background:
+                rgba(247, 245, 239, 0.95);
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+
+            backdrop-filter:
+                blur(12px);
+        }
+
+
+        .logo {
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size: 30px;
+
+            font-weight: bold;
+
+            letter-spacing: -1px;
+        }
+
+
+        .header-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+
+        .area-badge {
+            padding:
+                8px 14px;
+
+            background:
+                var(--green-light);
+
+            border-radius:
+                100px;
+
+            color:
+                var(--green);
+
+            font-size:
+                12px;
+        }
+
+
+        .library-button {
+            padding:
+                9px 15px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                100px;
+
+            background:
+                transparent;
+
+            color:
+                var(--muted);
+
+            font-size:
+                12px;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .library-button:hover {
+            color:
+                var(--green);
+
+            border-color:
+                var(--green);
+        }
+
+
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        main {
+            width:
+                min(1120px, 92%);
+
+            margin:
+                0 auto;
+        }
+
+
+
+        /* =========================================
+           HERO
+        ========================================= */
+
+        .hero {
+            width:
+                min(900px, 100%);
+
+            margin:
+                0 auto;
+
+            padding:
+                115px 0 105px;
+
+            text-align:
+                center;
+        }
+
+
+        .eyebrow {
+            margin:
+                0 0 18px;
+
+            color:
+                var(--green);
+
+            font-size:
+                11px;
+
+            font-weight:
+                bold;
+
+            letter-spacing:
+                3px;
+        }
+
+
+        .hero h1 {
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                clamp(48px, 6vw, 78px);
+
+            line-height:
+                1.28;
+
+            font-weight:
+                normal;
+
+            letter-spacing:
+                -2px;
+        }
+
+
+        .hero-description {
+            margin:
+                28px 0 0;
+
+            color:
+                var(--muted);
+
+            font-size:
+                16px;
+
+            line-height:
+                2;
+        }
+
+
+
+        /* =========================================
+           SEARCH
+        ========================================= */
+
+        .search-container {
+            max-width:
+                780px;
+
+            margin:
+                42px auto 0;
+        }
+
+
+        .search-form {
+            display: flex;
+
+            align-items: center;
+
+            padding:
+                7px;
+
+            gap:
+                5px;
+
+            background:
+                white;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                100px;
+
+            box-shadow:
+                var(--shadow);
+        }
+
+
+        .search-icon {
+            margin-left:
+                17px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                20px;
+        }
+
+
+        .search-form input {
+            flex: 1;
+
+            min-width: 0;
+
+            padding:
+                17px 12px;
+
+            border: none;
+
+            outline: none;
+
+            background:
+                transparent;
+
+            color:
+                var(--text);
+
+            font-size:
+                15px;
+        }
+
+
+        .result-count-select {
+            padding:
+                11px 8px;
+
+            border:
+                none;
+
+            border-left:
+                1px solid var(--border);
+
+            outline:
+                none;
+
+            background:
+                transparent;
+
+            color:
+                var(--muted);
+
+            font-size:
+                12px;
+
+            cursor:
+                pointer;
+        }
+
+
+        .search-submit {
+            padding:
+                16px 27px;
+
+            border:
+                none;
+
+            border-radius:
+                100px;
+
+            background:
+                var(--green);
+
+            color:
+                white;
+
+            font-weight:
+                bold;
+
+            cursor:
+                pointer;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .search-submit:hover {
+            background:
+                var(--green-hover);
+
+            transform:
+                translateY(-1px);
+        }
+
+
+
+        /* =========================================
+           EXAMPLES
+        ========================================= */
+
+        .examples-title {
+            margin:
+                20px 0 10px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                11px;
+        }
+
+
+        .example-list {
+            display: flex;
+
+            flex-wrap:
+                wrap;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+        }
+
+
+        .example-chip {
+            padding:
+                9px 14px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                100px;
+
+            background:
+                transparent;
+
+            color:
+                var(--muted);
+
+            font-size:
+                12px;
+
+            cursor:
+                pointer;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .example-chip:hover {
+            color:
+                var(--green);
+
+            border-color:
+                var(--green);
+
+            background:
+                var(--green-light);
+        }
+
+
+
+        /* =========================================
+           ERROR
+        ========================================= */
+
+        .error {
+            max-width:
+                700px;
+
+            margin:
+                24px auto 0;
+
+            padding:
+                14px 18px;
+
+            color:
+                #9d3e3e;
+
+            background:
+                #fff1f1;
+
+            border-radius:
+                12px;
+
+            font-size:
+                13px;
+        }
+
+
+
+        /* =========================================
+           FEATURES
+        ========================================= */
+
+        .features {
+            padding:
+                85px 0;
+
+            border-top:
+                1px solid var(--border);
+        }
+
+
+        .section-title h2 {
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                clamp(32px, 4vw, 45px);
+
+            font-weight:
+                normal;
+        }
+
+
+        .feature-grid {
+            margin-top:
+                45px;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap:
+                20px;
+        }
+
+
+        .feature-card {
+            min-height:
+                250px;
+
+            padding:
+                34px;
+
+            background:
+                white;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                20px;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+
+        .feature-card:hover {
+            transform:
+                translateY(-5px);
+
+            box-shadow:
+                var(--shadow);
+        }
+
+
+        .feature-number {
+            color:
+                var(--green);
+
+            font-size:
+                11px;
+
+            font-weight:
+                bold;
+
+            letter-spacing:
+                2px;
+        }
+
+
+        .feature-card h3 {
+            margin:
+                26px 0 15px;
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                24px;
+
+            font-weight:
+                normal;
+        }
+
+
+        .feature-card p {
+            margin: 0;
+
+            color:
+                var(--muted);
+
+            font-size:
+                14px;
+
+            line-height:
+                1.9;
+        }
+
+
+
+        /* =========================================
+           HISTORY
+        ========================================= */
+
+        .history-section {
+            padding:
+                80px 0 110px;
+
+            border-top:
+                1px solid var(--border);
+        }
+
+
+        .history-section h2 {
+            margin:
+                0 0 28px;
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                34px;
+
+            font-weight:
+                normal;
+        }
+
+
+        .history-list {
+            display: flex;
+
+            flex-wrap:
+                wrap;
+
+            gap:
+                10px;
+        }
+
+
+        .history-chip {
+            padding:
+                10px 16px;
+
+            background:
+                white;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                100px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                12px;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .history-chip:hover {
+            color:
+                var(--green);
+
+            border-color:
+                var(--green);
+        }
+
+
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        footer {
+            padding:
+                34px;
+
+            border-top:
+                1px solid var(--border);
+
+            color:
+                var(--muted);
+
+            text-align:
+                center;
+
+            font-size:
+                11px;
+        }
+
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (
+            max-width: 800px
+        ) {
+
+            .feature-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width: 650px
+        ) {
+
+            .header {
+                height:
+                    auto;
+
+                padding:
+                    17px 5%;
+            }
+
+
+            .area-badge {
+                display:
+                    none;
+            }
+
+
+            .hero {
+                padding:
+                    75px 0;
+            }
+
+
+            .hero h1 {
+                font-size:
+                    43px;
+            }
+
+
+            .search-form {
+                border-radius:
+                    18px;
+
+                flex-wrap:
+                    wrap;
+            }
+
+
+            .search-icon {
+                display:
+                    none;
+            }
+
+
+            .search-form input {
+                width:
+                    100%;
+            }
+
+
+            .result-count-select {
+                border-left:
+                    none;
+
+                padding-left:
+                    14px;
+            }
+
+
+            .search-submit {
+                width:
+                    100%;
+
+                border-radius:
+                    12px;
+            }
+
+        }
+
     </style>
+
 </head>
+
+
 <body>
-    <h1>Mikke</h1>
-    <p class="subtitle">今の気分やシチュエーションで、読みたい本をみつけよう</p>
 
-    <form action="/search" method="get">
-        <input type="text" name="q" placeholder="例: 疲れた時に読める短編小説" required>
-        <!-- ★変更点: 検索結果の件数を選べるプルダウンを追加 -->
-        <select id="max_results" name="max_results">
-            <option value="5">5件</option>
-            <option value="10" selected>10件</option>
-            <option value="15">15件</option>
-            <option value="20">20件</option>
-        </select>
-        <button type="submit">検索</button>
-    </form>
 
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
+<header class="header">
+
+    <a
+        class="logo"
+        href="{{ url_for('index') }}"
+    >
+        Mikke
+    </a>
+
+
+    <div class="header-right">
+
+
+        {% if library_area %}
+
+        <span class="area-badge">
+
+            📍
+            {{ library_area.pref }}
+
+            {% if library_area.city %}
+                {{ library_area.city }}
+            {% endif %}
+
+        </span>
+
+        {% endif %}
+
+
+        <a
+            class="library-button"
+            href="{{ url_for('library_setting') }}"
+        >
+            図書館を設定
+        </a>
+
+
+    </div>
+
+</header>
+
+
+
+<main>
+
+
+    <!-- ======================================
+         HERO
+    ======================================= -->
+
+    <section class="hero">
+
+
+        <p class="eyebrow">
+            AI BOOK DISCOVERY
+        </p>
+
+
+        <h1>
+            本との出会いを、<br>
+            もっと自由に。
+        </h1>
+
+
+        <p class="hero-description">
+
+            タイトルを知らなくても大丈夫。<br>
+
+            今の気分やシチュエーションを伝えるだけで、
+            AIエージェントがあなたに合う本を探します。
+
+        </p>
+
+
+
+        <div class="search-container">
+
+
+            <form
+                action="{{ url_for('search') }}"
+                method="GET"
+                class="search-form"
+            >
+
+
+                <span class="search-icon">
+                    ⌕
+                </span>
+
+
+                <input
+                    id="search-input"
+                    type="text"
+                    name="q"
+                    placeholder="例：夏っぽくて少し切ない青春小説"
+                    autocomplete="off"
+                    required
+                >
+
+
+                <!--
+                    app.pyの
+                    ALLOWED_MAX_RESULTS =
+                    [5, 10, 15, 20]
+                    に対応
+                -->
+
+                <select
+                    name="max_results"
+                    class="result-count-select"
+                    aria-label="表示件数"
+                >
+
+                    <option value="5">
+                        5冊
+                    </option>
+
+                    <option
+                        value="10"
+                        selected
+                    >
+                        10冊
+                    </option>
+
+                    <option value="15">
+                        15冊
+                    </option>
+
+                    <option value="20">
+                        20冊
+                    </option>
+
+                </select>
+
+
+                <button
+                    type="submit"
+                    class="search-submit"
+                >
+                    AIで探す
+                </button>
+
+
+            </form>
+
+
+
+            <p class="examples-title">
+                こんな探し方もできます
+            </p>
+
+
+            <div class="example-list">
+
+
+                <button
+                    type="button"
+                    class="example-chip"
+                    data-query="夏っぽくて少し切ない青春小説"
+                >
+                    夏っぽくて切ない
+                </button>
+
+
+                <button
+                    type="button"
+                    class="example-chip"
+                    data-query="1時間くらいで読み終わる短編小説"
+                >
+                    1時間で読める
+                </button>
+
+
+                <button
+                    type="button"
+                    class="example-chip"
+                    data-query="疲れている時に心が落ち着く本"
+                >
+                    疲れた日に
+                </button>
+
+
+                <button
+                    type="button"
+                    class="example-chip"
+                    data-query="就活を始める前に読んでおきたい本"
+                >
+                    就活前に
+                </button>
+
+
+                <button
+                    type="button"
+                    class="example-chip"
+                    data-query="思い切り泣きたい時に読む小説"
+                >
+                    泣ける小説
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        {% if error %}
+
+        <div class="error">
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- ======================================
+         FEATURES
+    ======================================= -->
+
+    <section class="features">
+
+
+        <div class="section-title">
+
+
+            <p class="eyebrow">
+                WHAT MIKKE CAN DO
+            </p>
+
+
+            <h2>
+                一冊を見つけてから、読むまで。
+            </h2>
+
+
+        </div>
+
+
+
+        <div class="feature-grid">
+
+
+            <article class="feature-card">
+
+
+                <span class="feature-number">
+                    01
+                </span>
+
+
+                <h3>
+                    AIで本を探す
+                </h3>
+
+
+                <p>
+
+                    「疲れた日に読みたい」
+                    「夏っぽくて切ない」などの
+                    曖昧な言葉から、
+                    AIエージェントが検索条件を考えます。
+
+                </p>
+
+
+            </article>
+
+
+
+            <article class="feature-card">
+
+
+                <span class="feature-number">
+                    02
+                </span>
+
+
+                <h3>
+                    図書館で探す
+                </h3>
+
+
+                <p>
+
+                    本のISBNと設定した地域を使って、
+                    近くの図書館の蔵書・貸出状況を
+                    確認できます。
+
+                </p>
+
+
+            </article>
+
+
+
+            <article class="feature-card">
+
+
+                <span class="feature-number">
+                    03
+                </span>
+
+
+                <h3>
+                    価格を比較する
+                </h3>
+
+
+                <p>
+
+                    Yahoo!ショッピングや
+                    楽天ブックスなどから
+                    価格情報を取得し、
+                    購入候補を比較できます。
+
+                </p>
+
+
+            </article>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ======================================
+         HISTORY
+    ======================================= -->
 
     {% if history %}
-    <!-- ★変更点: 検索履歴の表示ブロックを追加。クリックすると再検索できる -->
-    <div class="history">
-        <h2>最近の検索</h2>
-        <ul>
-            {% for keyword in history %}
-            <li><a href="/search?q={{ keyword }}">{{ keyword }}</a></li>
+
+    <section class="history-section">
+
+
+        <p class="eyebrow">
+            RECENT SEARCHES
+        </p>
+
+
+        <h2>
+            最近の検索
+        </h2>
+
+
+        <div class="history-list">
+
+
+            {% for item in history %}
+
+
+            <a
+                href="{{ url_for(
+                    'search',
+                    q=item,
+                    max_results=10
+                ) }}"
+                class="history-chip"
+            >
+
+                {{ item }}
+
+            </a>
+
+
             {% endfor %}
-        </ul>
-    </div>
+
+
+        </div>
+
+
+    </section>
+
     {% endif %}
 
-    <!-- ★変更点: 現在設定されている地域の表示。未設定なら「設定する」、設定済みなら地域名+「変更する」を表示 -->
-    <p style="margin-top: 30px; color: #888; font-size: 0.85em;">
-        {% if library_area %}
-            図書館の設定地域: {{ library_area.pref }}{% if library_area.city %} {{ library_area.city }}{% endif %}
-            <a href="/library-setting" style="color: #888;">(変更する)</a>
-        {% else %}
-            <a href="/library-setting" style="color: #888;">図書館の地域を設定する</a>
-        {% endif %}
-    </p>
+
+</main>
+
+
+
+<footer>
+
+    Mikke — AI Book Discovery
+
+</footer>
+
+
+
+<script>
+
+    const input =
+        document.getElementById(
+            "search-input"
+        );
+
+
+    document
+        .querySelectorAll(
+            ".example-chip"
+        )
+        .forEach(button => {
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+
+                    input.value =
+                        button.dataset.query;
+
+
+                    input.focus();
+
+
+                }
+            );
+
+
+        });
+
+</script>
+
+
 </body>
+
 </html>

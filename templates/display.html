@@ -1,103 +1,1651 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+
     <meta charset="UTF-8">
-    <title>検索結果 - Mikke</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {{ query }} - Mikke
+    </title>
+
+
     <style>
+
+        :root {
+            --background: #f7f5ef;
+            --surface: #ffffff;
+
+            --text: #242424;
+            --muted: #74736d;
+
+            --green: #274c3a;
+            --green-hover: #1f3d2f;
+            --green-light: #e8efe9;
+
+            --border: #e3e0d8;
+
+            --shadow:
+                0 18px 45px
+                rgba(0, 0, 0, 0.06);
+        }
+
+
+        * {
+            box-sizing:
+                border-box;
+        }
+
+
         body {
-            font-family: sans-serif;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
+            margin: 0;
+
+            background:
+                var(--background);
+
+            color:
+                var(--text);
+
+            font-family:
+                "Yu Gothic",
+                "Hiragino Kaku Gothic ProN",
+                sans-serif;
         }
-        a.back {
-            text-decoration: none;
-            color: #333;
+
+
+        a {
+            color:
+                inherit;
+
+            text-decoration:
+                none;
         }
-        h1 {
-            font-size: 1.3em;
+
+
+        button,
+        input,
+        select {
+            font:
+                inherit;
         }
-        /* ★変更点: 本1件全体をリンクにするためのスタイル */
-        a.book-link {
-            text-decoration: none;
-            color: inherit;
+
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+            min-height:
+                76px;
+
+            padding:
+                0 6%;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                35px;
+
+            position:
+                sticky;
+
+            top:
+                0;
+
+            z-index:
+                100;
+
+            background:
+                rgba(247, 245, 239, .95);
+
+            border-bottom:
+                1px solid var(--border);
+
+            backdrop-filter:
+                blur(12px);
         }
-        .book {
-            display: flex;
-            gap: 16px;
-            padding: 16px 0;
-            border-bottom: 1px solid #eee;
+
+
+        .logo {
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                30px;
+
+            font-weight:
+                bold;
+
+            letter-spacing:
+                -1px;
         }
-        .book:hover {
-            background: #fafafa;
+
+
+
+        /* =========================================
+           HEADER SEARCH
+        ========================================= */
+
+        .header-search {
+            width:
+                min(550px, 55vw);
+
+            padding:
+                5px;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            background:
+                white;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                100px;
         }
-        .book img {
-            width: 80px;
-            height: auto;
-            flex-shrink: 0;
+
+
+        .header-search input {
+            flex:
+                1;
+
+            min-width:
+                0;
+
+            padding:
+                11px 17px;
+
+            border:
+                none;
+
+            outline:
+                none;
+
+            background:
+                transparent;
+
+            font-size:
+                13px;
         }
-        .book-title {
-            font-weight: bold;
-            margin: 0 0 4px 0;
+
+
+        .header-search select {
+            padding:
+                8px 6px;
+
+            border:
+                none;
+
+            border-left:
+                1px solid var(--border);
+
+            outline:
+                none;
+
+            color:
+                var(--muted);
+
+            background:
+                transparent;
+
+            font-size:
+                11px;
         }
-        .book-meta {
-            color: #666;
-            font-size: 0.9em;
-            margin: 0 0 6px 0;
+
+
+        .header-search button {
+            padding:
+                10px 19px;
+
+            margin-left:
+                5px;
+
+            border:
+                none;
+
+            border-radius:
+                100px;
+
+            background:
+                var(--green);
+
+            color:
+                white;
+
+            cursor:
+                pointer;
         }
-        .book-desc {
-            font-size: 0.9em;
-            color: #333;
+
+
+        .header-search button:hover {
+            background:
+                var(--green-hover);
         }
-        .error {
-            color: #c00;
+
+
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        main {
+            width:
+                min(1120px, 92%);
+
+            margin:
+                0 auto;
+
+            padding:
+                55px 0 110px;
         }
-        /* ★変更点: AIの解釈結果を表示するスタイル */
+
+
+        .back {
+            display:
+                inline-block;
+
+            margin-bottom:
+                38px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                13px;
+
+            transition:
+                .2s;
+        }
+
+
+        .back:hover {
+            color:
+                var(--green);
+        }
+
+
+
+        /* =========================================
+           RESULT TITLE
+        ========================================= */
+
+        .eyebrow {
+            margin:
+                0 0 12px;
+
+            color:
+                var(--green);
+
+            font-size:
+                11px;
+
+            font-weight:
+                bold;
+
+            letter-spacing:
+                3px;
+        }
+
+
+        .result-title {
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                clamp(36px, 5vw, 54px);
+
+            font-weight:
+                normal;
+
+            line-height:
+                1.4;
+        }
+
+
+        .result-meta {
+            margin:
+                12px 0 0;
+
+            color:
+                var(--muted);
+
+            font-size:
+                13px;
+        }
+
+
+
+        /* =========================================
+           AI
+        ========================================= */
+
         .ai-note {
-            color: #666;
-            font-size: 0.85em;
-            background: #f0f4ff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            display: inline-block;
+            margin:
+                35px 0;
+
+            padding:
+                24px 28px;
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            gap:
+                17px;
+
+            background:
+                var(--green-light);
+
+            border-radius:
+                17px;
+
+            color:
+                var(--green);
         }
+
+
+        .ai-symbol {
+            font-size:
+                25px;
+
+            line-height:
+                1;
+        }
+
+
+        .ai-content {
+            flex:
+                1;
+        }
+
+
+        .ai-title {
+            margin:
+                0 0 11px;
+
+            font-size:
+                14px;
+
+            font-weight:
+                bold;
+        }
+
+
+        .ai-search-count {
+            margin:
+                0 0 12px;
+
+            color:
+                #557262;
+
+            font-size:
+                11px;
+        }
+
+
+        .keyword-list {
+            display:
+                flex;
+
+            flex-wrap:
+                wrap;
+
+            gap:
+                7px;
+        }
+
+
+        .keyword {
+            padding:
+                6px 10px;
+
+            background:
+                white;
+
+            border-radius:
+                100px;
+
+            font-size:
+                11px;
+        }
+
+
+
+        /* =========================================
+           TOOLBAR
+        ========================================= */
+
+        .toolbar {
+            margin:
+                35px 0 25px;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                20px;
+        }
+
+
+        .filter-list {
+            display:
+                flex;
+
+            flex-wrap:
+                wrap;
+
+            gap:
+                8px;
+        }
+
+
+        .filter-button {
+            padding:
+                9px 15px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                100px;
+
+            background:
+                transparent;
+
+            color:
+                var(--muted);
+
+            font-size:
+                12px;
+
+            cursor:
+                pointer;
+
+            transition:
+                .2s ease;
+        }
+
+
+        .filter-button:hover {
+            color:
+                var(--green);
+
+            border-color:
+                var(--green);
+        }
+
+
+        .filter-button.active {
+            color:
+                white;
+
+            background:
+                var(--green);
+
+            border-color:
+                var(--green);
+        }
+
+
+        .sort-select {
+            padding:
+                10px 14px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                10px;
+
+            background:
+                white;
+
+            color:
+                var(--muted);
+
+            outline:
+                none;
+
+            font-size:
+                12px;
+        }
+
+
+
+        /* =========================================
+           BOOK GRID
+        ========================================= */
+
+        .book-grid {
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                20px;
+        }
+
+
+        .book-card {
+            min-height:
+                315px;
+
+            padding:
+                25px;
+
+            display:
+                flex;
+
+            gap:
+                25px;
+
+            position:
+                relative;
+
+            background:
+                white;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                20px;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                border-color .2s ease;
+        }
+
+
+        .book-card:hover {
+            transform:
+                translateY(-5px);
+
+            box-shadow:
+                var(--shadow);
+
+            border-color:
+                #d6d2c8;
+        }
+
+
+
+        /* =========================================
+           COVER
+        ========================================= */
+
+        .cover-area {
+            flex:
+                0 0 130px;
+        }
+
+
+        .book-cover {
+            width:
+                130px;
+
+            height:
+                190px;
+
+            object-fit:
+                contain;
+
+            background:
+                #eeece7;
+
+            box-shadow:
+                0 12px 22px
+                rgba(0, 0, 0, .13);
+        }
+
+
+        .no-cover {
+            width:
+                130px;
+
+            height:
+                190px;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            color:
+                #aaa;
+
+            background:
+                #eeece7;
+
+            font-size:
+                11px;
+        }
+
+
+
+        /* =========================================
+           BOOK CONTENT
+        ========================================= */
+
+        .book-content {
+            flex:
+                1;
+
+            min-width:
+                0;
+        }
+
+
+        .category {
+            display:
+                inline-block;
+
+            margin-bottom:
+                10px;
+
+            padding:
+                5px 9px;
+
+            border-radius:
+                100px;
+
+            color:
+                var(--green);
+
+            background:
+                var(--green-light);
+
+            font-size:
+                9px;
+
+            max-width:
+                100%;
+
+            overflow:
+                hidden;
+
+            white-space:
+                nowrap;
+
+            text-overflow:
+                ellipsis;
+        }
+
+
+        .book-title {
+            margin:
+                0 0 9px;
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-size:
+                21px;
+
+            font-weight:
+                normal;
+
+            line-height:
+                1.45;
+        }
+
+
+        .book-title:hover {
+            color:
+                var(--green);
+        }
+
+
+        .book-author {
+            margin:
+                0 0 7px;
+
+            font-size:
+                13px;
+        }
+
+
+        .book-meta {
+            margin:
+                0 0 14px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                11px;
+        }
+
+
+        .book-desc {
+            margin:
+                0 0 20px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                12px;
+
+            line-height:
+                1.8;
+        }
+
+
+        .detail-link {
+            color:
+                var(--green);
+
+            font-size:
+                12px;
+
+            font-weight:
+                bold;
+        }
+
+
+        .detail-link:hover {
+            text-decoration:
+                underline;
+        }
+
+
+
+        /* =========================================
+           ERROR / EMPTY
+        ========================================= */
+
+        .error {
+            margin:
+                40px 0;
+
+            padding:
+                20px;
+
+            color:
+                #9d3e3e;
+
+            background:
+                #fff1f1;
+
+            border-radius:
+                12px;
+        }
+
+
+        .empty {
+            padding:
+                80px 20px;
+
+            text-align:
+                center;
+
+            color:
+                var(--muted);
+        }
+
+
+        .empty h2 {
+            color:
+                var(--text);
+
+            font-family:
+                Georgia,
+                "Yu Mincho",
+                serif;
+
+            font-weight:
+                normal;
+        }
+
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (
+            max-width: 900px
+        ) {
+
+            .book-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width: 650px
+        ) {
+
+            .header {
+                padding:
+                    16px 5%;
+            }
+
+
+            .header-search {
+                display:
+                    none;
+            }
+
+
+            main {
+                padding-top:
+                    35px;
+            }
+
+
+            .toolbar {
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+            }
+
+
+            .book-card {
+                flex-direction:
+                    column;
+            }
+
+
+            .cover-area {
+                text-align:
+                    center;
+            }
+
+
+            .book-cover,
+            .no-cover {
+                width:
+                    150px;
+
+                height:
+                    215px;
+
+                margin:
+                    0 auto;
+            }
+
+
+            .result-title {
+                font-size:
+                    35px;
+            }
+
+        }
+
     </style>
+
 </head>
+
+
 <body>
-    <a class="back" href="/">← トップに戻る</a>
-    <h1>「{{ query }}」の検索結果</h1>
-    {% if max_results %}
-    <!-- ★変更点: 何件表示の設定で検索したかを表示 -->
-    <p style="color:#888; font-size:0.85em;">最大{{ max_results }}件表示({{ books|length }}件ヒット)</p>
-    {% endif %}
+
+
+
+<!-- ======================================
+     HEADER
+======================================= -->
+
+<header class="header">
+
+
+    <a
+        class="logo"
+        href="{{ url_for('index') }}"
+    >
+        Mikke
+    </a>
+
+
+
+    <form
+        action="{{ url_for('search') }}"
+        method="GET"
+        class="header-search"
+    >
+
+
+        <input
+            type="text"
+            name="q"
+            value="{{ query }}"
+            placeholder="気分や本のタイトルを入力"
+            required
+        >
+
+
+        <select
+            name="max_results"
+            aria-label="表示件数"
+        >
+
+            <option
+                value="5"
+                {% if max_results == 5 %}
+                selected
+                {% endif %}
+            >
+                5冊
+            </option>
+
+
+            <option
+                value="10"
+                {% if max_results == 10 %}
+                selected
+                {% endif %}
+            >
+                10冊
+            </option>
+
+
+            <option
+                value="15"
+                {% if max_results == 15 %}
+                selected
+                {% endif %}
+            >
+                15冊
+            </option>
+
+
+            <option
+                value="20"
+                {% if max_results == 20 %}
+                selected
+                {% endif %}
+            >
+                20冊
+            </option>
+
+
+        </select>
+
+
+        <button type="submit">
+            検索
+        </button>
+
+
+    </form>
+
+
+</header>
+
+
+
+<main>
+
+
+
+    <a
+        class="back"
+        href="{{ url_for('index') }}"
+    >
+        ← トップに戻る
+    </a>
+
+
+
+    <!-- ======================================
+         TITLE
+    ======================================= -->
+
+    <section>
+
+
+        <p class="eyebrow">
+            SEARCH RESULT
+        </p>
+
+
+        <h1 class="result-title">
+            「{{ query }}」
+        </h1>
+
+
+        <p class="result-meta">
+
+            {{ books|length }}冊の候補
+
+            {% if max_results %}
+
+                ・ 最大{{ max_results }}冊表示
+
+            {% endif %}
+
+        </p>
+
+
+    </section>
+
+
+
+    <!-- ======================================
+         AI AGENT
+    ======================================= -->
+
     {% if queries_used %}
-    <!-- ★変更点: エージェントが実際に何回・どんなキーワードで検索したかを見せる(透明性のため) -->
-    <p class="ai-note">
-        AIエージェントが{{ queries_used|length }}回検索しました:
-        {% for q in queries_used %}「{{ q }}」{% if not loop.last %} → {% endif %}{% endfor %}
-    </p>
+
+
+    <section class="ai-note">
+
+
+        <div class="ai-symbol">
+            ✦
+        </div>
+
+
+        <div class="ai-content">
+
+
+            <p class="ai-title">
+                Mikke AIが検索内容を解釈しました
+            </p>
+
+
+            <p class="ai-search-count">
+
+                AIエージェントが
+                {{ queries_used|length }}
+                回検索
+
+            </p>
+
+
+            <div class="keyword-list">
+
+
+                {% for q in queries_used %}
+
+
+                <span class="keyword">
+                    {{ q }}
+                </span>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
     {% endif %}
 
+
+
+    <!-- ======================================
+         ERROR
+    ======================================= -->
+
     {% if error %}
-        <p class="error">エラーが発生しました: {{ error }}</p>
+
+
+        <div class="error">
+
+            エラーが発生しました:
+            {{ error }}
+
+        </div>
+
+
     {% elif books|length == 0 %}
-        <p>本が見つかりませんでした。</p>
+
+
+        <div class="empty">
+
+            <h2>
+                本が見つかりませんでした
+            </h2>
+
+            <p>
+                別の言葉や条件で検索してみてください。
+            </p>
+
+        </div>
+
+
     {% else %}
+
+
+
+    <!-- ======================================
+         TOOLBAR
+    ======================================= -->
+
+    <section class="toolbar">
+
+
+        <div
+            id="filter-list"
+            class="filter-list"
+        >
+
+
+            <button
+                type="button"
+                class="filter-button active"
+                data-category="all"
+            >
+                すべて
+            </button>
+
+
+        </div>
+
+
+
+        <select
+            id="sort-select"
+            class="sort-select"
+        >
+
+
+            <option value="default">
+                おすすめ順
+            </option>
+
+
+            <option value="new">
+                新しい順
+            </option>
+
+
+            <option value="title">
+                タイトル順
+            </option>
+
+
+        </select>
+
+
+    </section>
+
+
+
+    <!-- ======================================
+         BOOKS
+    ======================================= -->
+
+    <section
+        id="book-grid"
+        class="book-grid"
+    >
+
+
+
         {% for book in books %}
-        <!-- ★変更点: クリックすると /book/<id> の詳細ページに遷移する -->
-        <a class="book-link" href="/book/{{ book.id }}">
-            <div class="book">
-                {% if book.thumbnail %}
-                    <img src="{{ book.thumbnail }}" alt="{{ book.title }}">
-                {% endif %}
-                <div>
-                    <p class="book-title">{{ book.title }}</p>
-                    <p class="book-meta">{{ book.authors }}{% if book.published_date %} / {{ book.published_date }}{% endif %}</p>
-                    <p class="book-desc">{{ book.description }}{% if book.description_is_truncated %}...{% endif %}</p>
-                </div>
+
+
+        <article
+            class="book-card"
+            data-index="{{ loop.index }}"
+            data-title="{{ book.title }}"
+            data-date="{{ book.published_date }}"
+            data-categories="{{ book.categories|join('|') }}"
+        >
+
+
+
+            <div class="cover-area">
+
+
+                <a
+                    href="{{ url_for(
+                        'book_detail',
+                        book_id=book.id
+                    ) }}"
+                >
+
+
+                    {% if book.thumbnail %}
+
+
+                    <img
+                        class="book-cover"
+                        src="{{ book.thumbnail }}"
+                        alt="{{ book.title }}"
+                    >
+
+
+                    {% else %}
+
+
+                    <div class="no-cover">
+                        NO COVER
+                    </div>
+
+
+                    {% endif %}
+
+
+                </a>
+
+
             </div>
-        </a>
+
+
+
+            <div class="book-content">
+
+
+
+                {% if book.categories %}
+
+
+                <span class="category">
+                    {{ book.categories[0] }}
+                </span>
+
+
+                {% endif %}
+
+
+
+                <h2 class="book-title">
+
+
+                    <a
+                        href="{{ url_for(
+                            'book_detail',
+                            book_id=book.id
+                        ) }}"
+                    >
+
+                        {{ book.title }}
+
+                    </a>
+
+
+                </h2>
+
+
+
+                <p class="book-author">
+                    {{ book.authors }}
+                </p>
+
+
+
+                <p class="book-meta">
+
+
+                    {{ book.publisher }}
+
+
+                    {% if book.published_date %}
+
+                        /
+                        {{ book.published_date }}
+
+                    {% endif %}
+
+
+                </p>
+
+
+
+                <p class="book-desc">
+
+
+                    {{ book.description }}
+
+
+                    {% if book.description_is_truncated %}
+
+                        ...
+
+                    {% endif %}
+
+
+                </p>
+
+
+
+                <a
+                    class="detail-link"
+                    href="{{ url_for(
+                        'book_detail',
+                        book_id=book.id
+                    ) }}"
+                >
+                    詳細を見る →
+                </a>
+
+
+            </div>
+
+
+        </article>
+
+
         {% endfor %}
+
+
+
+    </section>
+
+
     {% endif %}
+
+
+</main>
+
+
+
+<script>
+
+    /* ======================================
+       FILTER
+    ======================================= */
+
+    const cards =
+        Array.from(
+            document.querySelectorAll(
+                ".book-card"
+            )
+        );
+
+
+    const filterList =
+        document.getElementById(
+            "filter-list"
+        );
+
+
+    const categorySet =
+        new Set();
+
+
+
+    cards.forEach(card => {
+
+
+        const categories =
+            card.dataset.categories
+                .split("|")
+                .filter(Boolean);
+
+
+        categories.forEach(
+            category =>
+                categorySet.add(
+                    category
+                )
+        );
+
+
+    });
+
+
+
+    Array
+        .from(categorySet)
+        .slice(0, 5)
+        .forEach(category => {
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.className =
+                "filter-button";
+
+
+            button.dataset.category =
+                category;
+
+
+            button.textContent =
+                category;
+
+
+            filterList.appendChild(
+                button
+            );
+
+
+        });
+
+
+
+    if (filterList) {
+
+
+        filterList.addEventListener(
+            "click",
+            event => {
+
+
+                const clickedButton =
+                    event.target.closest(
+                        ".filter-button"
+                    );
+
+
+                if (!clickedButton) {
+                    return;
+                }
+
+
+                document
+                    .querySelectorAll(
+                        ".filter-button"
+                    )
+                    .forEach(button => {
+
+                        button.classList.remove(
+                            "active"
+                        );
+
+                    });
+
+
+                clickedButton.classList.add(
+                    "active"
+                );
+
+
+                const selected =
+                    clickedButton.dataset.category;
+
+
+
+                cards.forEach(card => {
+
+
+                    const visible =
+                        selected === "all"
+                        ||
+                        card.dataset.categories.includes(
+                            selected
+                        );
+
+
+                    card.style.display =
+                        visible
+                            ? "flex"
+                            : "none";
+
+
+                });
+
+
+            }
+        );
+
+    }
+
+
+
+    /* ======================================
+       SORT
+    ======================================= */
+
+    const grid =
+        document.getElementById(
+            "book-grid"
+        );
+
+
+    const sort =
+        document.getElementById(
+            "sort-select"
+        );
+
+
+    if (
+        sort
+        &&
+        grid
+    ) {
+
+
+        sort.addEventListener(
+            "change",
+            () => {
+
+
+                const sorted =
+                    [...cards];
+
+
+                const selected =
+                    sort.value;
+
+
+
+                if (
+                    selected === "title"
+                ) {
+
+
+                    sorted.sort(
+                        (a, b) =>
+                            a.dataset.title.localeCompare(
+                                b.dataset.title,
+                                "ja"
+                            )
+                    );
+
+
+                }
+
+
+                else if (
+                    selected === "new"
+                ) {
+
+
+                    sorted.sort(
+                        (a, b) =>
+                            b.dataset.date.localeCompare(
+                                a.dataset.date
+                            )
+                    );
+
+
+                }
+
+
+                else {
+
+
+                    sorted.sort(
+                        (a, b) =>
+                            Number(
+                                a.dataset.index
+                            )
+                            -
+                            Number(
+                                b.dataset.index
+                            )
+                    );
+
+
+                }
+
+
+
+                sorted.forEach(
+                    card =>
+                        grid.appendChild(
+                            card
+                        )
+                );
+
+
+            }
+        );
+
+    }
+
+</script>
+
+
 </body>
+
 </html>
