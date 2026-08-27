@@ -11,7 +11,7 @@
     >
 
     <title>
-        {{ query }} - Mikke
+        {{ query }} - OptiBook
     </title>
 
 
@@ -588,6 +588,9 @@
             border-radius:
                 20px;
 
+            cursor:
+                pointer;
+
             transition:
                 transform .2s ease,
                 box-shadow .2s ease,
@@ -943,7 +946,7 @@
         class="logo"
         href="{{ url_for('index') }}"
     >
-        Mikke
+        OptiBook
     </a>
 
 
@@ -1090,7 +1093,7 @@
 
 
             <p class="ai-title">
-                Mikke AIが検索内容を解釈しました
+                OptiBook AIが検索内容を解釈しました
             </p>
 
 
@@ -1239,6 +1242,8 @@
             data-title="{{ book.title }}"
             data-date="{{ book.published_date }}"
             data-categories="{{ book.categories|join('|') }}"
+            data-url="{{ url_for('book_detail', book_id=book.id) }}"
+            onclick="window.location.href=this.dataset.url"
         >
 
 
