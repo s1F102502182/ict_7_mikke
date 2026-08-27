@@ -41,6 +41,14 @@
         button:hover {
             background: #555;
         }
+        /* ★変更点: 件数選択プルダウンのスタイル */
+        select#max_results {
+            padding: 12px 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: white;
+        }
         .error {
             color: #c00;
             margin-top: 10px;
@@ -83,6 +91,13 @@
 
     <form action="/search" method="get">
         <input type="text" name="q" placeholder="例: 疲れた時に読める短編小説" required>
+        <!-- ★変更点: 検索結果の件数を選べるプルダウンを追加 -->
+        <select id="max_results" name="max_results">
+            <option value="5">5件</option>
+            <option value="10" selected>10件</option>
+            <option value="15">15件</option>
+            <option value="20">20件</option>
+        </select>
         <button type="submit">検索</button>
     </form>
 
